@@ -33,8 +33,13 @@ def main():
             match_file_path = f"{user_folder}/{match_id}.json"
             if not os.path.exists(match_file_path):
                 data_file = open(match_file_path, "w")
-                match_details = api.get_match_details(match_id)
+                while True:
+                    match_details = api.get_match_details(match_id)
+                    if match_details:
+                        break
+
                 data_file.write(json.dumps(match_details))
+                data_file.close()
 
         if len(matchIDs) < 20:
             break
