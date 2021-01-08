@@ -49,7 +49,6 @@ class ValorantAPI(object):
         jsonUri = urllib.parse.parse_qs(uri)
 
         access_token = jsonUri["https://playvalorant.com/opt_in#access_token"][0]
-        print("access token: " + access_token)
 
         return access_token
 
@@ -65,7 +64,6 @@ class ValorantAPI(object):
         )
 
         entitlements_token = r.json()["entitlements_token"]
-        print("entitlements token: " + entitlements_token)
 
         return entitlements_token
 
@@ -103,13 +101,13 @@ class ValorantAPI(object):
 
         return jsonData
 
-    def get_match_history(self):
+    def get_match_history(self, start_index=0, end_index=20):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "X-Riot-Entitlements-JWT": f"{self.entitlements_token}",
         }
         r = requests.get(
-            f"https://pd.{self.region}.a.pvp.net/match-history/v1/history/{self.user_info}?startIndex=0&endIndex=20",
+            f"https://pd.{self.region}.a.pvp.net/match-history/v1/history/{self.user_info}?startIndex={start_index}&endIndex={end_index}",
             headers=headers,
             cookies=self.cookies,
         )
