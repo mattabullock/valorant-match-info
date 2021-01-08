@@ -21,7 +21,7 @@ def main():
 
     for match_id in matchIDs:
         data_file = open(user_folder + "/" + match_id + ".json", "w")
-        match_details = api.get_match_details(matchIDs[0])
+        match_details = api.get_match_details(match_id)
         data_file.write(json.dumps(match_details))
 
 
