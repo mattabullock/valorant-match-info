@@ -13,11 +13,7 @@ class ValorantAPI(object):
         self.password = password
         self.region = region
 
-        self.cookies = self.get_cookies()
-
-        self.access_token = self.get_access_token()
-
-        self.entitlements_token = self.get_entitlements_token()
+        self.authenticate()
 
         self.user_info, self.game_name = self.get_user_info()
 
@@ -34,6 +30,13 @@ class ValorantAPI(object):
             json=data,
         )
 
+        # If handle_response wants to retry
+        if self.handle_response(r):
+            r = requests.post(
+                "https://auth.riotgames.com/api/v1/authorization",
+                json=data,
+            )
+
         cookies = r.cookies
 
         return cookies
@@ -45,6 +48,15 @@ class ValorantAPI(object):
             json=data,
             cookies=self.cookies,
         )
+
+        # If handle_response wants to retry
+        if self.handle_response(r):
+            r = requests.put(
+                "https://auth.riotgames.com/api/v1/authorization",
+                json=data,
+                cookies=self.cookies,
+            )
+
         uri = r.json()["response"]["parameters"]["uri"]
         jsonUri = urllib.parse.parse_qs(uri)
 
@@ -63,6 +75,15 @@ class ValorantAPI(object):
             cookies=self.cookies,
         )
 
+        # If handle_response wants to retry
+        if self.handle_response(r):
+            r = requests.post(
+                "https://entitlements.auth.riotgames.com/api/token/v1",
+                headers=headers,
+                json={},
+                cookies=self.cookies,
+            )
+
         entitlements_token = r.json()["entitlements_token"]
 
         return entitlements_token
@@ -78,6 +99,16 @@ class ValorantAPI(object):
             json={},
             cookies=self.cookies,
         )
+
+        # If handle_response wants to retry
+        if self.handle_response(r):
+            r = requests.post(
+                "https://auth.riotgames.com/userinfo",
+                headers=headers,
+                json={},
+                cookies=self.cookies,
+            )
+
         jsonData = r.json()
         user_info = jsonData["sub"]
         name = jsonData["acct"]["game_name"]
@@ -86,31 +117,51 @@ class ValorantAPI(object):
 
         return user_info, game_name
 
-    def get_competitive_match_history(self):
+    def get_competitive_match_history(self, user_id=""):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "X-Riot-Entitlements-JWT": f"{self.entitlements_token}",
         }
+
+        user_id = self.user_info if user_id == "" else user_id
+
         r = requests.get(
-            f"https://pd.{self.region}.a.pvp.net/mmr/v1/players/{self.user_info}/competitiveupdates?startIndex=0&endIndex=20",
+            f"https://pd.{self.region}.a.pvp.net/mmr/v1/players/{user_id}/competitiveupdates?startIndex=0&endIndex=20",
             headers=headers,
             cookies=self.cookies,
         )
+
+        # If handle_response wants to retry
+        if self.handle_response(r):
+            r = requests.get(
+                f"https://pd.{self.region}.a.pvp.net/mmr/v1/players/{self.user_info}/competitiveupdates?startIndex=0&endIndex=20",
+                headers=headers,
+                cookies=self.cookies,
+            )
 
         jsonData = r.json()
 
         return jsonData
 
-    def get_match_history(self, start_index=0, end_index=20):
+    def get_match_history(self, user_id="", start_index=0, end_index=20):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "X-Riot-Entitlements-JWT": f"{self.entitlements_token}",
         }
+        user_id = self.user_info if user_id == "" else user_id
         r = requests.get(
-            f"https://pd.{self.region}.a.pvp.net/match-history/v1/history/{self.user_info}?startIndex={start_index}&endIndex={end_index}",
+            f"https://pd.{self.region}.a.pvp.net/match-history/v1/history/{user_id}?startIndex={start_index}&endIndex={end_index}",
             headers=headers,
             cookies=self.cookies,
         )
+
+        # If handle_response wants to retry
+        if self.handle_response(r):
+            r = requests.get(
+                f"https://pd.{self.region}.a.pvp.net/match-history/v1/history/{user_id}?startIndex={start_index}&endIndex={end_index}",
+                headers=headers,
+                cookies=self.cookies,
+            )
 
         jsonData = r.json()
 
@@ -121,12 +172,52 @@ class ValorantAPI(object):
             "Authorization": f"Bearer {self.access_token}",
             "X-Riot-Entitlements-JWT": f"{self.entitlements_token}",
         }
+
         r = requests.get(
             f"https://pd.{self.region}.a.pvp.net/match-details/v1/matches/{match_id}?startIndex=0&endIndex=20",
             headers=headers,
             cookies=self.cookies,
         )
 
+        # If handle_response wants to retry
+        if self.handle_response(r):
+            r = requests.get(
+                f"https://pd.{self.region}.a.pvp.net/match-details/v1/matches/{match_id}?startIndex=0&endIndex=20",
+                headers=headers,
+                cookies=self.cookies,
+            )
+
         jsonData = r.json()
 
         return jsonData
+
+    def authenticate(self) -> None:
+        self.cookies = self.get_cookies()
+        self.access_token = self.get_access_token()
+        self.entitlements_token = self.get_entitlements_token()
+
+    def handle_response(self, response) -> bool:
+        """
+        Returns if you should retry the request
+        """
+        if response:
+
+            # request succeeded
+            if response.status_code == 200:
+                return False
+
+            # authentication expired
+            response_json = response.json()
+            if response_json["httpStatus"] == 400:
+                self.authenticate()
+                return True
+        raise UnexpectedResponse("Got unexpected response", response.text)
+
+
+class UnexpectedResponse(Exception):
+    def __init__(self, message, data):
+        self.message = message
+        self.data = data
+
+    def __str__(self):
+        return f"{self.message} - {str(self.data)}"

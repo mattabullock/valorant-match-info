@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 import json
 from ValorantAPI import ValorantAPI
 
@@ -10,6 +11,12 @@ def main():
     creds_file.close()
 
     api = ValorantAPI(creds["username"], creds["password"], "na")
+    print(f"Downloading history for {player_id}")
+    download_match_history(api, player_id, 1)
+
+
+def download_match_history(api, user_id, depth=0):
+    players = set()
 
     start_index = 0
     end_index = 20
@@ -18,13 +25,13 @@ def main():
     if not os.path.exists("data"):
         os.makedirs("data")
 
-    user_folder = f"data/{api.user_info}"
+    user_folder = f"data/{user_id}"
 
     if not os.path.exists(user_folder):
         os.makedirs(user_folder)
 
     while start_index < total_games:
-        data = api.get_match_history(start_index, end_index)
+        data = api.get_match_history(user_id, start_index, end_index)
         if total_games == sys.maxsize:
             total_games = data["Total"]
         matchIDs = [obj["MatchID"] for obj in data["History"]]
@@ -32,20 +39,35 @@ def main():
         for match_id in matchIDs:
             match_file_path = f"{user_folder}/{match_id}.json"
             if not os.path.exists(match_file_path):
-                data_file = open(match_file_path, "w")
                 while True:
                     match_details = api.get_match_details(match_id)
+                    time.sleep(1)
                     if match_details:
                         break
+                    print(f"Retrying id: {match_id}")
 
+                data_file = open(match_file_path, "w")
                 data_file.write(json.dumps(match_details))
                 data_file.close()
+
+                for player in match_details["players"]:
+                    players.add(player["subject"])
+            else:
+                data_file = open(match_file_path, "r")
+                match_details = json.load(data_file)
+                for player in match_details["players"]:
+                    players.add(player["subject"])
 
         if len(matchIDs) < 20:
             break
 
         start_index = end_index
         end_index = start_index + 20
+
+    if depth > 0:
+        for player_id in players:
+            print(f"Downloading history for {player_id}")
+            download_match_history(api, player_id, depth - 1)
 
 
 if __name__ == "__main__":
