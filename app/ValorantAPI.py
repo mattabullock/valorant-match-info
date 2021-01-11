@@ -61,6 +61,7 @@ class ValorantAPI(object):
         jsonUri = urllib.parse.parse_qs(uri)
 
         access_token = jsonUri["https://playvalorant.com/opt_in#access_token"][0]
+        print("access token: " + access_token)
 
         return access_token
 
@@ -85,6 +86,7 @@ class ValorantAPI(object):
             )
 
         entitlements_token = r.json()["entitlements_token"]
+        print("entitlements token: " + entitlements_token)
 
         return entitlements_token
 
@@ -191,6 +193,31 @@ class ValorantAPI(object):
 
         return jsonData
 
+    def get_content_ids(self):
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "X-Riot-Entitlements-JWT": f"{self.entitlements_token}",
+            "X-Riot-ClientVersion": "release-01.14-32-502227",
+        }
+
+        r = requests.get(
+            "https://shared.na.a.pvp.net/content-service/v2/content",
+            headers=headers,
+            cookies=self.cookies,
+        )
+
+        # If handle_response wants to retry
+        if self.handle_response(r):
+            r = requests.get(
+                "https://shared.na.a.pvp.net/content-service/v2/content",
+                headers=headers,
+                cookies=self.cookies,
+            )
+
+        jsonData = r.json()
+
+        return jsonData
+
     def authenticate(self) -> None:
         self.cookies = self.get_cookies()
         self.access_token = self.get_access_token()
@@ -200,18 +227,17 @@ class ValorantAPI(object):
         """
         Returns if you should retry the request
         """
-        if response:
+        # request succeeded
+        if response.status_code == 200:
+            return False
 
-            # request succeeded
-            if response.status_code == 200:
-                return False
+        # authentication expired
+        response_json = response.json()
+        if response_json["httpStatus"] == 400:
+            self.authenticate()
+            return True
 
-            # authentication expired
-            response_json = response.json()
-            if response_json["httpStatus"] == 400:
-                self.authenticate()
-                return True
-        raise UnexpectedResponse("Got unexpected response", response.text)
+        raise UnexpectedResponse("Got unexpected response", response_json)
 
 
 class UnexpectedResponse(Exception):

@@ -6,16 +6,32 @@ from ValorantAPI import ValorantAPI
 
 
 def main():
+    player_id = "a8192f46-4bba-5fa7-994d-f9c95055f3e1"
     creds_file = open("credentials.json", "r")
     creds = json.load(creds_file)
     creds_file.close()
 
     api = ValorantAPI(creds["username"], creds["password"], "na")
-    print(f"Downloading history for {player_id}")
-    download_match_history(api, player_id, 1)
+    # download_match_history(api, player_id, 1)
+    get_latest_match(api, player_id)
+    print(api.get_competitive_match_history("a8192f46-4bba-5fa7-994d-f9c95055f3e1"))
+
+
+def get_latest_match(api, user_id):
+    print("Downloading latest match for {user_id}")
+    if not os.path.exists("temp"):
+        os.makedirs("temp")
+    data = api.get_match_history(user_id)
+    match_id = data["History"][0]["MatchID"]
+    match_file_path = f"temp/{match_id}.json"
+    match_details = api.get_match_details(match_id)
+    data_file = open(match_file_path, "w")
+    data_file.write(json.dumps(match_details))
+    data_file.close()
 
 
 def download_match_history(api, user_id, depth=0):
+    print(f"Downloading history for {user_id}")
     players = set()
 
     start_index = 0
@@ -66,7 +82,6 @@ def download_match_history(api, user_id, depth=0):
 
     if depth > 0:
         for player_id in players:
-            print(f"Downloading history for {player_id}")
             download_match_history(api, player_id, depth - 1)
 
 
