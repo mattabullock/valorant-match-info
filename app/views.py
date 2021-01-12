@@ -1,6 +1,7 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from app import app
 import os
+import sys
 import json
 
 
@@ -24,8 +25,18 @@ def get_mmr(uid: str = ""):
     return None
 
 
-@app.route("/api/user/<uid>/kills")
-def get_kills(uid: str = ""):
+# TODO: regexes!
+@app.route("/api/user/<uid>/kills/<game_map>")
+def get_kills(uid: str = "", game_map: str = ""):
+    # move this
+    GAME_MAPS = {
+        "ascent": "/Game/Maps/Ascent/Ascent",
+        "icebox": "/Game/Maps/Port/Port",
+        "split": "/Game/Maps/Duality/Duality",
+        "haven": "/Game/Maps/Triad/Triad",
+        "bind": "/Game/Maps/Bonsai/Bonsai",
+    }
+
     path = os.path.dirname(os.path.abspath(__file__))
 
     files = os.listdir(f"{path}/../data/{uid}")
@@ -39,6 +50,8 @@ def get_kills(uid: str = ""):
         game = json.load(game_file)
         game_id = game["matchInfo"]["matchId"]
         game_obj["mapId"] = game["matchInfo"]["mapId"]
+        if game_obj["mapId"] != GAME_MAPS[game_map]:
+            continue
 
         # comp/unrated/snowball/etc
         game_obj["queueID"] = game["matchInfo"]["queueID"]
@@ -54,7 +67,9 @@ def get_kills(uid: str = ""):
         game_kills = []
         roundResults = game["roundResults"]
         for round in roundResults:
-            plant_time = round["plantRoundTime"]
+            plant_time = (
+                round["plantRoundTime"] if "plantRoundTime" in round else sys.maxint
+            )
             index = next(
                 (
                     i
@@ -68,9 +83,11 @@ def get_kills(uid: str = ""):
                 if kill["roundTime"] > plant_time:
                     kill["postPlant"] = True
                     kill["plantSite"] = round["plantSite"]
+                else:
+                    kill["postPlant"] = False
             game_kills += kills
 
         game_obj["kills"] = game_kills
         games[game_id] = game_obj
 
-    return games
+    return render_template("kills.html", kills=games)

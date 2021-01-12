@@ -1,0 +1,17 @@
+body {
+    background: gray
+}
+
+img {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: block;
+}
+
+svg {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    display: block;
+}
