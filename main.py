@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import json
-from app.api.ValorantAPI import ValorantAPI
+from ecoround.api.ValorantAPI import ValorantAPI
 
 
 def main():

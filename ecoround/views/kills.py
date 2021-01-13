@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 
-from ValorantMatchInfo import app
+from ecoround import app
 
 import os
 import sys

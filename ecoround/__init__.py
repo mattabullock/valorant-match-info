@@ -2,4 +2,4 @@ from flask import Flask
 
 app = Flask(__name__)
 
-from app.views import kills
+from ecoround.views import kills
