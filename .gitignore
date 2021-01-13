@@ -3,3 +3,4 @@ tags
 tags.lock
 data/
 __pycache__/
+temp/
