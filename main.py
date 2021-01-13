@@ -2,7 +2,7 @@ import os
 import sys
 import time
 import json
-from ValorantAPI import ValorantAPI
+from app.api.ValorantAPI import ValorantAPI
 
 
 def main():
@@ -13,15 +13,15 @@ def main():
 
     api = ValorantAPI(creds["username"], creds["password"], "na")
     # download_match_history(api, player_id, 1)
-    get_latest_match(api, player_id)
-    print(api.get_competitive_match_history("a8192f46-4bba-5fa7-994d-f9c95055f3e1"))
+    # get_latest_match(api, player_id)
+    print(api.get_competitive_match_history("1059a895-5eb7-543c-93de-f1cf1204311b"))
 
 
 def get_latest_match(api, user_id):
     print("Downloading latest match for {user_id}")
     if not os.path.exists("temp"):
         os.makedirs("temp")
-    data = api.get_match_history(user_id)
+    data = api.get_match_history()
     match_id = data["History"][0]["MatchID"]
     match_file_path = f"temp/{match_id}.json"
     match_details = api.get_match_details(match_id)

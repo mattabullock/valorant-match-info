@@ -126,6 +126,7 @@ class ValorantAPI(object):
         }
 
         user_id = self.user_info if user_id == "" else user_id
+        print("user_id")
 
         r = requests.get(
             f"https://pd.{self.region}.a.pvp.net/mmr/v1/players/{user_id}/competitiveupdates?startIndex=0&endIndex=20",
@@ -136,7 +137,7 @@ class ValorantAPI(object):
         # If handle_response wants to retry
         if self.handle_response(r):
             r = requests.get(
-                f"https://pd.{self.region}.a.pvp.net/mmr/v1/players/{self.user_info}/competitiveupdates?startIndex=0&endIndex=20",
+                f"https://pd.{self.region}.a.pvp.net/mmr/v1/players/{user_id}/competitiveupdates?startIndex=0&endIndex=20",
                 headers=headers,
                 cookies=self.cookies,
             )
