@@ -2,3 +2,4 @@ credentials.json
 tags
 tags.lock
 data/
+__pycache__/
