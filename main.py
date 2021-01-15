@@ -6,15 +6,15 @@ from ecoround.api.ValorantAPI import ValorantAPI
 
 
 def main():
-    player_id = "a8192f46-4bba-5fa7-994d-f9c95055f3e1"
+    player_id = "b2736519-f52f-52df-8542-aa07679b7d8f"
     creds_file = open("credentials.json", "r")
     creds = json.load(creds_file)
     creds_file.close()
 
     api = ValorantAPI(creds["username"], creds["password"], "na")
-    # download_match_history(api, player_id, 1)
+    download_match_history(api, player_id, 0)
     # get_latest_match(api, player_id)
-    print(api.get_competitive_match_history("1059a895-5eb7-543c-93de-f1cf1204311b"))
+    # print(api.get_competitive_match_history("1059a895-5eb7-543c-93de-f1cf1204311b"))
 
 
 def get_latest_match(api, user_id):

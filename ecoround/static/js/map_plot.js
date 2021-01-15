@@ -1,4 +1,4 @@
-$(function() {
+function display_kills(playerId, kills) {
 
     var width = 1075
     var height = 1075
@@ -26,46 +26,57 @@ $(function() {
     svg.attr("width", width)
        .attr("height", height)
 
-    kills.forEach(function(file) {
-        d3.json("data/" + player_id + "/" + file).then(function(json) {
-            if (json["matchInfo"]["mapId"] !== "/Game/Maps/Port/Port") {
-                return
-            }
-            console.log(file)
-            kills = json["kills"]
-            playerLocations = kills[0]["playerLocations"]
-            player_kills = []
-            player_deaths = []
-            kills.forEach(function(kill) {
-                //if (kill["victim"] === player_id) //defense
-                    //player_deaths.push(kill)
-                if (kill["killer"] === player_id && kill)
-                    player_kills.push(kill)
+    console.log(playerId)
+    kills.forEach(function(json) {
+        console.log(json)
+        kills = json["kills"]
+        playerLocations = kills[0]["playerLocations"]
+        player_kills = []
+        player_deaths = []
+        kills.forEach(function(kill) {
+            //if (kill["victim"] === playerId) //defense
+                //player_deaths.push(kill)
+            if (kill["killer"] === playerId && kill)
+                player_kills.push(kill)
+        })
+        svg.append('g').selectAll("dot")
+           .data(player_kills)
+           .enter()
+           .append("circle")
+           .attr("cx", function (d) {
+               player = d["playerLocations"].find(element => element["subject"] === playerId)
+               return x(player["location"]["x"])-125;
+           })
+           .attr("cy", function (d) {
+               player = d["playerLocations"].find(element => element["subject"] === playerId)
+               return y(player["location"]["y"])-125;
+           })
+           .attr("r", 7)
+           .attr("fill", "green")
+           .on("mouseover", function(ev, d) {
+               console.log(d)
+                svg.append("circle")
+                   .attr("cx", function () {
+                       return x(d["victimLocation"]["x"])-125;
+                   })
+                   .attr("cy", function () {
+                       return y(d["victimLocation"]["y"])-125;
+                   })
+                   .attr("r", 7)
+                   .attr("fill", "yellow")
+                   .attr("class", "victim")
             })
-            svg.append('g').selectAll("dot")
-               .data(player_kills)
-               .enter()
-               .append("circle")
-               .attr("cx", function (d) {
-                   player = d["playerLocations"].find(element => element["subject"] === player_id)
-                   return x(player["location"]["x"])-125;
-               })
-               .attr("cy", function (d) {
-                   player = d["playerLocations"].find(element => element["subject"] === player_id)
-                   return y(player["location"]["y"])-125;
-               })
-               .attr("r", 7)
-               .attr("fill", "green")
-               .on("mouseover", function(ev, d) {console.log(d)})
-            svg.append('g').selectAll("dot")
-               .data(player_deaths)
-               .enter()
-               .append("circle")
-               .attr("cx", function (d) {return x(d["victimLocation"]["x"])-125})
-               .attr("cy", function (d) {return y(d["victimLocation"]["y"])-125})
-               .attr("r", 7)
-               .attr("fill", "red")
-               .on("mouseover", function(ev, d) {console.log(d)})
-        });
+            .on("mouseout", function(ev, d) {
+                d3.select(".victim").remove()
+            })
+        svg.append('g').selectAll("dot")
+           .data(player_deaths)
+           .enter()
+           .append("circle")
+           .attr("cx", function (d) {return x(d["victimLocation"]["x"])-125})
+           .attr("cy", function (d) {return y(d["victimLocation"]["y"])-125})
+           .attr("r", 7)
+           .attr("fill", "red")
+           .on("mouseover", function(ev, d) {console.log(d)})
     })
-});
+}
