@@ -21,7 +21,7 @@ def second_round(uid: str = ""):
             first_round = game_data["roundResults"][0]
             second_round = game_data["roundResults"][1]
 
-            team_won_first_round = first_round["winningTeam"] == player_team.value
+            team_won_first_round = first_round["winningTeam"] == player_team
             if team_won_first_round:
                 second_rounds_after_win.append(second_round)
 
