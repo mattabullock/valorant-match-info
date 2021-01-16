@@ -7,27 +7,10 @@ import sys
 import json
 
 
-@app.route("/user/<uid>/firstround")
-def first_round(uid: str = ""):
-    files = utils.get_files_by_uid(uid)
-    for file_path in files:
-        with open(file_path, "r") as file:
-            game_data = json.load(file)
-            if game_data["matchInfo"]["queueID"] == "deathmatch":
-                continue
-
-            player_team = utils.get_player_team(uid, game_data)
-            first_round = game_data["roundResults"][0]
-
-            team_won = first_round["winningTeam"] == player_team.value
-            team_won_by = first_round["roundResult"]
-            print(team_won)
-    return "asdf"
-
-
 @app.route("/user/<uid>/secondround")
 def second_round(uid: str = ""):
     files = utils.get_files_by_uid(uid)
+    second_rounds_after_win = []
     for file_path in files:
         with open(file_path, "r") as file:
             game_data = json.load(file)
@@ -39,8 +22,7 @@ def second_round(uid: str = ""):
             second_round = game_data["roundResults"][1]
 
             team_won_first_round = first_round["winningTeam"] == player_team.value
-            second_rounds_after_win = []
             if team_won_first_round:
-                print("yay")
+                second_rounds_after_win.append(second_round)
 
     return "asdf"

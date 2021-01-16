@@ -18,7 +18,7 @@ function display_kills(playerId, kills) {
         //.range([ 0, width ]);
 
     var x = function(coord) {
-        var translatedX = (0.000072 * coord + 0.460214)
+        var translatedX = (0.000072 * coord + 0.460214) * width;
         console.log("x: " + coord + " " + translatedX)
         return translatedX;
     }
