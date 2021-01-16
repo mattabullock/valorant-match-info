@@ -13,13 +13,23 @@ function display_kills(playerId, kills) {
     // ->
     // 135, 550
 
-    var x = d3.scaleLinear()
-        .domain([6300, -8250])
-        .range([ 0, width ]);
+    //var x = d3.scaleLinear()
+        //.domain([6300, -8250])
+        //.range([ 0, width ]);
 
-    var y = d3.scaleLinear()
-        .domain([10000, -4500])
-        .range([ 0, height ]);
+    var x = function(coord) {
+        var translatedX = (0.000072 * coord + 0.460214)
+        console.log("x: " + coord + " " + translatedX)
+        return translatedX;
+    }
+
+    var y = function(coord) {
+        return (-0.000072 * coord +	0.304687) * height;
+    }
+
+    //var y = d3.scaleLinear()
+        //.domain([10000, -4500])
+        //.range([ 0, height ]);
 
     svg = d3.select("#plot")
 
@@ -45,11 +55,11 @@ function display_kills(playerId, kills) {
            .append("circle")
            .attr("cx", function (d) {
                player = d["playerLocations"].find(element => element["subject"] === playerId)
-               return x(player["location"]["x"])-125;
+               return x(player["location"]["x"]);
            })
            .attr("cy", function (d) {
                player = d["playerLocations"].find(element => element["subject"] === playerId)
-               return y(player["location"]["y"])-125;
+               return y(player["location"]["y"]);
            })
            .attr("r", 7)
            .attr("fill", "green")

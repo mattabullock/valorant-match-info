@@ -25,8 +25,8 @@ def first_round(uid: str = ""):
     return "asdf"
 
 
-@app.route("/user/<uid>/firstround")
-def first_round(uid: str = ""):
+@app.route("/user/<uid>/secondround")
+def second_round(uid: str = ""):
     files = utils.get_files_by_uid(uid)
     for file_path in files:
         with open(file_path, "r") as file:

@@ -1,11 +1,6 @@
 from enum import Enum
-from pydantic import BaseClass
-
-
-class Team(BaseClass):
-    color: TeamColor
-    players: List[Player]
-    player_ids: List[str]
+from typing import List
+from pydantic import BaseModel
 
 
 class TeamColor(str, Enum):
@@ -13,9 +8,15 @@ class TeamColor(str, Enum):
     Blue = "Blue"
 
 
-class Player(BaseClass):
+class Player(BaseModel):
     id: str
     name: str
     tagLine: str
     characterId: str
     competitiveTier: int
+
+
+class Team(BaseModel):
+    color: TeamColor
+    players: List[Player]
+    player_ids: List[str]

@@ -1,6 +1,6 @@
 import os
 from typing import List
-from ecoround.models.team import Team
+from ecoround.models.game import TeamColor
 
 
 def get_files_by_uid(uid: str) -> List[str]:
