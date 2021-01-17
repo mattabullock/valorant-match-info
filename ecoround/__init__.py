@@ -1,5 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.schema import MetaData
+
 
 import json
 
@@ -10,6 +12,7 @@ sql_user = "password"
 sql_host = "localhost"
 sql_host = "5432"
 sql_db_name = "flask"
+sql_schema_name = "public"
 
 with open("credentials.json", "r") as creds_file:
     creds = json.load(creds_file)
@@ -18,15 +21,16 @@ with open("credentials.json", "r") as creds_file:
     sql_host = creds["sql"]["host"]
     sql_port = creds["sql"]["port"]
     sql_db_name = creds["sql"]["db_name"]
-
+    sql_schema_name = creds["sql"]["schema_name"]
 
 app.config[
     "SQLALCHEMY_DATABASE_URI"
 ] = f"postgresql://{sql_user}:{sql_password}@{sql_host}:{sql_port}/{sql_db_name}"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-db = SQLAlchemy()
-db.init_app(app)
+metadata = MetaData(schema=sql_schema_name)
+
+db = SQLAlchemy(app=app, metadata=metadata)
 
 from ecoround.models import match
 from ecoround.views import kills, saveround

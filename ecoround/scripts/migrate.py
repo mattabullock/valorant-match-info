@@ -10,6 +10,8 @@ def migrate(player_id: str):
     files = get_files_by_uid(player_id)
 
     with app.app_context():
+        db.drop_all()
+        db.create_all()
         for file_path in files:
             with open(file_path, "r") as game_file:
                 game_data = json.load(game_file)
@@ -75,5 +77,5 @@ def migrate(player_id: str):
                             weapon_id=game_player["economy"]["weapon"],
                             armor_id=game_player["economy"]["armor"],
                         )
-                    db.session.merge(economy)
+                        db.session.add(economy)
             db.session.commit()

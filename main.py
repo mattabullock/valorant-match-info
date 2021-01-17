@@ -63,6 +63,15 @@ def main():
         )
         download.get_content(api)
 
+    if sys.argv[1] == "get_match_history":
+        creds_file = open("credentials.json", "r")
+        creds = json.load(creds_file)
+        creds_file.close()
+
+        api = ValorantAPI(
+            creds["valorant"]["username"], creds["valorant"]["password"], "na"
+        )
+        print(json.dumps(api.get_match_history(player_id), indent=4))
     if sys.argv[1] == "test_query":
         with app.app_context():
             specific_player = aliased(Player)
