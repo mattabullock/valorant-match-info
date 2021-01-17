@@ -68,3 +68,8 @@ def download_match_history(api, user_id, depth=0):
     if depth > 0:
         for player_id in players:
             download_match_history(api, player_id, depth - 1)
+
+
+def get_content(api):
+    # TODO: put this in the db
+    print(json.dumps(api.get_content_ids(), indent=4))

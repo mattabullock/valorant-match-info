@@ -2,10 +2,13 @@ import os
 import sys
 import time
 import json
+
+from sqlalchemy.orm import aliased
+
 from ecoround.api.ValorantAPI import ValorantAPI
 from ecoround.scripts import download, migrate
 from ecoround import db, app
-from ecoround.models.match import Round, Economy
+from ecoround.models.match import Round, Economy, Player, Match
 
 
 def main():
@@ -50,13 +53,39 @@ def main():
                 indent=4,
             )
         )
+    if sys.argv[1] == "get_content":
+        creds_file = open("credentials.json", "r")
+        creds = json.load(creds_file)
+        creds_file.close()
+
+        api = ValorantAPI(
+            creds["valorant"]["username"], creds["valorant"]["password"], "na"
+        )
+        download.get_content(api)
+
     if sys.argv[1] == "test_query":
         with app.app_context():
-            economies = Economy.query.join(Economy.round).filter(
-                Round.round_num.in_([0, 1])
+            specific_player = aliased(Player)
+            other_player = aliased(Player)
+            economies = (
+                Economy.query.join(Economy.round)
+                .join(Round.match)
+                .join(other_player)
+                .join(
+                    specific_player,
+                    specific_player.account_id
+                    == "b2736519-f52f-52df-8542-aa07679b7d8f",
+                )
+                .filter(
+                    (Match.queue_id == "competitive")
+                    & Round.round_num.in_([0])
+                    & (other_player.team_id == specific_player.team_id)
+                )
             )
             for economy in economies:
-                print(economy.round.round_num)
+                print(
+                    f"{economy.player.account.game_name}#{economy.player.account.tag_line} spent {economy.spent} in round {economy.round.round_num} of {economy.player.match.match_id}"
+                )
 
 
 if __name__ == "__main__":

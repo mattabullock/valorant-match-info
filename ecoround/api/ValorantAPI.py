@@ -198,7 +198,7 @@ class ValorantAPI(object):
         headers = {
             "Authorization": f"Bearer {self.access_token}",
             "X-Riot-Entitlements-JWT": f"{self.entitlements_token}",
-            "X-Riot-ClientVersion": "release-01.14-32-502227",
+            "X-Riot-ClientVersion": "release-02.00-30-510809",
         }
 
         r = requests.get(
