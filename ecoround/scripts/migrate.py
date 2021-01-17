@@ -2,7 +2,7 @@ import json
 import sqlalchemy
 
 from ecoround.utils import get_files_by_uid
-from ecoround.models.match import Match, Player, Round, Economy
+from ecoround.models.match import Match, Player, Round, Economy, Account
 from ecoround import db, app
 
 
@@ -27,10 +27,16 @@ def migrate(player_id: str):
                     completion_state=match_info["completionState"],
                 )
                 db.session.merge(match)
-                db.session.flush()
+
+                players = {}
                 for game_player in game_data["players"]:
+                    account = Account(
+                        account_id=game_player["subject"],
+                        game_name=game_player["gameName"],
+                        tag_line=game_player["tagLine"],
+                    )
                     player = Player(
-                        player_id=game_player["subject"],
+                        account_id=game_player["subject"],
                         match_id=match_info["matchId"],
                         team_id=game_player["teamId"],
                         party_id=game_player["partyId"],
@@ -43,8 +49,10 @@ def migrate(player_id: str):
                         rounds_played=game_player["stats"]["roundsPlayed"],
                         score=game_player["stats"]["score"],
                     )
-                    db.session.merge(player)
+                    db.session.merge(account)
+                    db.session.add(player)
                     db.session.flush()
+                    players[player.account_id] = player.player_id
 
                 for game_round in game_data["roundResults"]:
                     round = Round(
@@ -60,7 +68,7 @@ def migrate(player_id: str):
                         economy = Economy(
                             match_id=match_info["matchId"],
                             round_id=round.round_id,
-                            player_id=game_player["subject"],
+                            player_id=players[game_player["subject"]],
                             loadout_value=game_player["economy"]["loadoutValue"],
                             spent=game_player["economy"]["spent"],
                             remaining=game_player["economy"]["remaining"],
@@ -68,5 +76,4 @@ def migrate(player_id: str):
                             armor_id=game_player["economy"]["armor"],
                         )
                     db.session.merge(economy)
-                    db.session.flush()
             db.session.commit()

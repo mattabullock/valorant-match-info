@@ -47,11 +47,32 @@ class Match(db.Model):
         self.completion_state = completion_state
 
 
+class Account(db.Model):
+    account_id = db.Column(db.String(40), primary_key=True)
+    game_name = db.Column(db.String(40), nullable=False)
+    tag_line = db.Column(db.String(10), nullable=False)
+
+    players = db.relationship(
+        "Player",
+        backref="account",
+        lazy=True,
+        primaryjoin="Account.account_id == Player.account_id",
+    )
+
+    def __init__(self, account_id, game_name, tag_line):
+        self.account_id = account_id
+        self.game_name = game_name
+        self.tag_line = tag_line
+
+
 class Player(db.Model):
     __tablename__ = "player"
     __table_args__ = (db.UniqueConstraint("player_id", "match_id"),)
 
-    player_id = db.Column(db.String(40), nullable=False, primary_key=True)
+    player_id = db.Column(db.BigInteger(), autoincrement=True, primary_key=True)
+    account_id = db.Column(
+        db.String(40), db.ForeignKey("account.account_id"), nullable=False
+    )
     match_id = db.Column(db.String(40), db.ForeignKey("match.match_id"), nullable=False)
     team_id = db.Column(db.String(40), nullable=False)
     party_id = db.Column(db.String(40), nullable=False)
@@ -79,7 +100,7 @@ class Player(db.Model):
 
     def __init__(
         self,
-        player_id,
+        account_id,
         match_id,
         team_id,
         party_id,
@@ -92,7 +113,7 @@ class Player(db.Model):
         rounds_played,
         score,
     ):
-        self.player_id = player_id
+        self.account_id = account_id
         self.match_id = match_id
         self.team_id = team_id
         self.party_id = party_id
@@ -157,10 +178,10 @@ class Event(db.Model):
         db.BigInteger(), db.ForeignKey("round.round_id"), nullable=False
     )
     player_id = db.Column(
-        db.String(40), db.ForeignKey("player.player_id"), nullable=False
+        db.BigInteger(), db.ForeignKey("player.player_id"), nullable=False
     )
     type = db.Column(db.String(20), nullable=False)
-    victim_id = db.Column(db.String(40), db.ForeignKey("player.player_id"))
+    victim_id = db.Column(db.BigInteger(), db.ForeignKey("player.player_id"))
     round_time = db.Column(db.Integer(), nullable=False)
     location_x = db.Column(db.Integer(), nullable=False)
     location_y = db.Column(db.Integer(), nullable=False)
@@ -207,7 +228,7 @@ class Economy(db.Model):
         db.BigInteger(), db.ForeignKey("round.round_id"), nullable=False
     )
     player_id = db.Column(
-        db.String(40), db.ForeignKey("player.player_id"), nullable=False
+        db.BigInteger(), db.ForeignKey("player.player_id"), nullable=False
     )
     loadout_value = db.Column(db.Integer(), nullable=False)
     spent = db.Column(db.Integer(), nullable=False)
@@ -248,10 +269,10 @@ class Damage(db.Model):
         db.BigInteger(), db.ForeignKey("round.round_id"), nullable=False
     )
     player_id = db.Column(
-        db.String(40), db.ForeignKey("player.player_id"), nullable=False
+        db.BigInteger(), db.ForeignKey("player.player_id"), nullable=False
     )
     victim_id = db.Column(
-        db.String(40), db.ForeignKey("player.player_id"), nullable=False
+        db.BigInteger(), db.ForeignKey("player.player_id"), nullable=False
     )
     event_id = db.Column(db.BigInteger(), db.ForeignKey("event.event_id"))
     damage = db.Column(db.SmallInteger(), nullable=False)
