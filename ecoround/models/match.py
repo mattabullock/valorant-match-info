@@ -1,19 +1,22 @@
 from flask_sqlalchemy import SQLAlchemy
 
+from ecoround import db
+
 
 class Match(db.Model):
     __tablename__ = "match"
 
     match_id = db.Column(db.String(40), nullable=False, primary_key=True)
-    map = db.Column(db.String(50), nullable=False)
+    map_id = db.Column(db.String(50), nullable=False)
     game_version = db.Column(db.String(40), nullable=False)
     game_pod_id = db.Column(db.String(60), nullable=False)
-    game_length_millis = db.Column(db.Integer(), nullable=False)
-    game_start_millis = db.Column(db.Integer(), nullable=False)
+    game_length_millis = db.Column(db.Integer, nullable=False)
+    game_start_millis = db.Column(db.BigInteger, nullable=False)
     queue_id = db.Column(db.String(20), nullable=False)
     is_ranked = db.Column(db.Boolean(), nullable=False)
     season_id = db.Column(db.String(40), nullable=False)
     completion_state = db.Column(db.String(20), nullable=False)
+
     players = db.relationship("Player", backref="match", lazy=True)
     rounds = db.relationship("Round", backref="match", lazy=True)
     events = db.relationship("Event", backref="match", lazy=True)
@@ -22,21 +25,23 @@ class Match(db.Model):
     def __init__(
         self,
         match_id,
-        map,
+        map_id,
         game_version,
         game_pod_id,
         game_length_millis,
         game_start_millis,
+        queue_id,
         is_ranked,
         season_id,
         completion_state,
     ):
         self.match_id = match_id
-        self.map = map
+        self.map_id = map_id
         self.game_version = game_version
         self.game_pod_id = game_pod_id
         self.game_length_millis = game_length_millis
         self.game_start_millis = game_start_millis
+        self.queue_id = queue_id
         self.is_ranked = is_ranked
         self.season_id = season_id
         self.completion_state = completion_state
@@ -44,6 +49,7 @@ class Match(db.Model):
 
 class Player(db.Model):
     __tablename__ = "player"
+    __table_args__ = (db.UniqueConstraint("player_id", "match_id"),)
 
     player_id = db.Column(db.String(40), nullable=False, primary_key=True)
     match_id = db.Column(db.String(40), db.ForeignKey("match.match_id"), nullable=False)
@@ -89,6 +95,7 @@ class Player(db.Model):
 
 class Round(db.Model):
     __tablename__ = "round"
+    __table_args__ = (db.UniqueConstraint("round_num", "match_id"),)
 
     round_id = db.Column(db.BigInteger(), autoincrement=True, primary_key=True)
     match_id = db.Column(db.String(40), db.ForeignKey("match.match_id"), nullable=False)
@@ -118,6 +125,9 @@ class Round(db.Model):
 
 class Event(db.Model):
     __tablename__ = "event"
+    __table_args__ = (
+        db.UniqueConstraint("round_id", "match_id", "round_time", "victim_id"),
+    )
 
     event_id = db.Column(db.BigInteger(), autoincrement=True, primary_key=True)
     match_id = db.Column(db.String(40), db.ForeignKey("match.match_id"), nullable=False)
@@ -130,7 +140,6 @@ class Event(db.Model):
     type = db.Column(db.String(20), nullable=False)
     victim_id = db.Column(db.String(40), db.ForeignKey("player.player_id"))
     round_time = db.Column(db.Integer(), nullable=False)
-    # assistants = db.Column()
     location_x = db.Column(db.Integer(), nullable=False)
     location_y = db.Column(db.Integer(), nullable=False)
     finishing_damage_type = db.Column(db.String(40))
@@ -144,13 +153,13 @@ class Event(db.Model):
         round_id,
         player_id,
         type,
-        victim_id,
         round_time,
         location_x,
         location_y,
-        finishing_damage_type,
-        finishing_damage_item,
-        plant_site,
+        victim_id=None,
+        finishing_damage_type=None,
+        finishing_damage_item=None,
+        plant_site=None,
     ):
         self.event_id = event_id
         self.match_id = match_id
@@ -168,6 +177,7 @@ class Event(db.Model):
 
 class Economy(db.Model):
     __tablename__ = "economy"
+    __table_args__ = (db.UniqueConstraint("match_id", "round_id", "player_id"),)
 
     economy_id = db.Column(db.BigInteger(), autoincrement=True, primary_key=True)
     match_id = db.Column(db.String(40), db.ForeignKey("match.match_id"), nullable=False)
@@ -192,8 +202,8 @@ class Economy(db.Model):
         loadout_value,
         spent,
         remaining,
-        weapon_id,
-        armor_id,
+        weapon_id=None,
+        armor_id=None,
     ):
         self.economy_id = economy_id
         self.match_id = match_id
@@ -208,6 +218,9 @@ class Economy(db.Model):
 
 class Damage(db.Model):
     __tablename__ = "damage"
+    __table_args__ = (
+        db.UniqueConstraint("match_id", "round_id", "player_id", "victim_id"),
+    )
 
     damage_id = db.Column(db.BigInteger(), autoincrement=True, primary_key=True)
     match_id = db.Column(db.String(40), db.ForeignKey("match.match_id"), nullable=False)
@@ -220,11 +233,11 @@ class Damage(db.Model):
     victim_id = db.Column(
         db.String(40), db.ForeignKey("player.player_id"), nullable=False
     )
-    event_id = db.column(db.BigInteger(), db.ForeignKey("event.event_id"))
-    damage = db.column(db.SmallInteger(), nullable=False)
-    headshots = db.column(db.SmallInteger(), nullable=False)
-    bodyshots = db.column(db.SmallInteger(), nullable=False)
-    legshots = db.column(db.SmallInteger(), nullable=False)
+    event_id = db.Column(db.BigInteger(), db.ForeignKey("event.event_id"))
+    damage = db.Column(db.SmallInteger(), nullable=False)
+    headshots = db.Column(db.SmallInteger(), nullable=False)
+    bodyshots = db.Column(db.SmallInteger(), nullable=False)
+    legshots = db.Column(db.SmallInteger(), nullable=False)
 
     def __init__(
         self,
@@ -232,11 +245,11 @@ class Damage(db.Model):
         round_id,
         player_id,
         victim_id,
-        event_id,
         damage,
         headshots,
         bodyshots,
         legshots,
+        event_id=None,
     ):
         self.damage_id = damage_id
         self.match_id = match_id
@@ -250,6 +263,7 @@ class Damage(db.Model):
         self.legshots = legshots
 
 
+"""
 class Weapon(db.Model):
     __tablename__ = "weapon"
 
@@ -260,3 +274,4 @@ class Armor(db.Model):
 
 class Character(db.Model):
     __tablename__ = "character"
+"""
