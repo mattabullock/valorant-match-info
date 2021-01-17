@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request
 
 from ecoround import app, utils
+from ecoround.models.match import Round
 
 import os
 import sys
@@ -11,18 +12,8 @@ import json
 def second_round(uid: str = ""):
     files = utils.get_files_by_uid(uid)
     second_rounds_after_win = []
-    for file_path in files:
-        with open(file_path, "r") as file:
-            game_data = json.load(file)
-            if game_data["matchInfo"]["queueID"] != "competitive":
-                continue
-
-            player_team = utils.get_player_team(uid, game_data)
-            first_round = game_data["roundResults"][0]
-            second_round = game_data["roundResults"][1]
-
-            team_won_first_round = first_round["winningTeam"] == player_team
-            if team_won_first_round:
-                second_rounds_after_win.append(second_round)
+    rounds = Round.query.filter(Round.round_num.in_([0, 1]))
+    for round in rounds:
+        print(round.economies)
 
     return "asdf"

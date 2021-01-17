@@ -64,6 +64,19 @@ class Player(db.Model):
     rounds_played = db.Column(db.Integer(), nullable=False)
     score = db.Column(db.Integer(), nullable=False)
 
+    events = db.relationship(
+        "Event",
+        backref="player",
+        lazy=True,
+        primaryjoin="Player.player_id == Event.player_id",
+    )
+    economies = db.relationship(
+        "Economy",
+        backref="player",
+        lazy=True,
+        primaryjoin="Player.player_id == Economy.player_id",
+    )
+
     def __init__(
         self,
         player_id,
@@ -103,19 +116,28 @@ class Round(db.Model):
     winning_team = db.Column(db.String(40), nullable=False)
     round_result_code = db.Column(db.String(40), nullable=False)
     round_ceremony = db.Column(db.String(40), nullable=False)
-    events = db.relationship("Event", backref="round", lazy=True)
-    economies = db.relationship("Economy", backref="round", lazy=True)
+
+    events = db.relationship(
+        "Event",
+        backref="round",
+        lazy=True,
+        primaryjoin="Round.round_id == Economy.round_id",
+    )
+    economies = db.relationship(
+        "Economy",
+        backref="round",
+        lazy=True,
+        primaryjoin="Round.round_id == Economy.round_id",
+    )
 
     def __init__(
         self,
-        round_id,
         match_id,
         round_num,
         winning_team,
         round_result_code,
         round_ceremony,
     ):
-        self.round_id = round_id
         self.match_id = match_id
         self.round_num = round_num
         self.winning_team = winning_team
@@ -195,7 +217,6 @@ class Economy(db.Model):
 
     def __init__(
         self,
-        economy_id,
         match_id,
         round_id,
         player_id,
@@ -205,7 +226,6 @@ class Economy(db.Model):
         weapon_id=None,
         armor_id=None,
     ):
-        self.economy_id = economy_id
         self.match_id = match_id
         self.round_id = round_id
         self.player_id = player_id

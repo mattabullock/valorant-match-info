@@ -33,5 +33,3 @@ from ecoround.views import kills, saveround
 
 with app.app_context():
     db.create_all()
-    result = db.engine.table_names()
-    print(result)
