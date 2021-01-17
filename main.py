@@ -52,16 +52,11 @@ def main():
         )
     if sys.argv[1] == "test_query":
         with app.app_context():
-            economies = Economy.query.filter(Economy.round.round_num == 0)
+            economies = Economy.query.join(Economy.round).filter(
+                Round.round_num.in_([0, 1])
+            )
             for economy in economies:
-                print(economy)
-            # rounds = Round.query.filter(Round.round_num.in_([0, 1]))
-            # for round in rounds:
-            # print(round.economies)
-
-    # download.download_match_history(api, player_id, 0)
-    # download.get_latest_match(api, player_id)
-    # print(api.get_competitive_match_history("1059a895-5eb7-543c-93de-f1cf1204311b"))
+                print(economy.round.round_num)
 
 
 if __name__ == "__main__":

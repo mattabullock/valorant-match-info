@@ -10,8 +10,8 @@ class Match(db.Model):
     map_id = db.Column(db.String(50), nullable=False)
     game_version = db.Column(db.String(40), nullable=False)
     game_pod_id = db.Column(db.String(60), nullable=False)
-    game_length_millis = db.Column(db.Integer, nullable=False)
-    game_start_millis = db.Column(db.BigInteger, nullable=False)
+    game_length_millis = db.Column(db.Integer(), nullable=False)
+    game_start_millis = db.Column(db.BigInteger(), nullable=False)
     queue_id = db.Column(db.String(20), nullable=False)
     is_ranked = db.Column(db.Boolean(), nullable=False)
     season_id = db.Column(db.String(40), nullable=False)
@@ -121,7 +121,7 @@ class Round(db.Model):
         "Event",
         backref="round",
         lazy=True,
-        primaryjoin="Round.round_id == Economy.round_id",
+        primaryjoin="Round.round_id == Event.round_id",
     )
     economies = db.relationship(
         "Economy",
