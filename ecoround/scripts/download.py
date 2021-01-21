@@ -7,7 +7,7 @@ def get_latest_match(api, user_id):
     print("Downloading latest match for {user_id}")
     if not os.path.exists("temp"):
         os.makedirs("temp")
-    data = api.get_match_history()
+    data = api.get_match_history(user_id)
     match_id = data["History"][0]["MatchID"]
     match_file_path = f"temp/{match_id}.json"
     match_details = api.get_match_details(match_id)
